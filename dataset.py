@@ -8,7 +8,11 @@ import torch
 from torchvision.utils import save_image, make_grid
 from zqypackage import read_image
 import numpy as np
-
+def transform_image(image):
+    image = image.astype(np.float32)
+    image = torch.from_numpy(image.copy())
+    image = image/10000
+    return image, image_mask
 
 class SRSFGANDataset(Dataset):
     def __init__(self, root, mode="train"):
@@ -34,48 +38,16 @@ class SRSFGANDataset(Dataset):
         lt0,_,_,_ = read_image(self.lt0[index])
         lt1,_,_,_= read_image(self.lt1[index])
         mt1,_,_,_ = read_image(self.mt1[index])
-        lt0s = torch.from_numpy(lt0.astype(np.float32))
-        lt1s = torch.from_numpy(lt1.astype(np.float32))
-        mt1s = torch.from_numpy(mt1.astype(np.float32))
-        for i in range(len(lt0)):
-            im0 = lt0s[i,:,:]
-            lt0s[i,:,:] = self.transform(im0)
-            im1 = lt1s[i,:,:]
-            lt1s[i,:,:] = self.transform(im1)
-            im3 = mt1s[i,:,:]
-            mt1s[i,:,:] = self.transform(im3)
-        return lt0s,mt1s,lt1s
+        images = [lt0,mt1,lt1]
+        patches = [None] * len(images)
 
+        for i in range(len(images)):
+            im = images[i]
+            im, _ = transform_image(im)
+            patches[i] = im
+        # gt_mask = masks[0] * masks[1] * masks[2] * masks[3]
 
-if __name__ == '__main__':
-    e = SRSFGANDataset(r"E:\traindata",mode='val')
-    lt0s,mt1s,lt1s = e[0]
-    print(type(lt0s))
-
-    # plt.imshow(a)
-    # plt.show()
-s = torch.from_numpy(mt1.astype(np.float32))
-        for i in range(len(lt0)):
-            im0 = lt0s[i,:,:]
-            lt0s[i,:,:] = self.transform(im0)
-            im1 = lt1s[i,:,:]
-            lt1s[i,:,:] = self.transform(im1)
-            im3 = mt1s[i,:,:]
-            mt1s[i,:,:] = self.transform(im3)
-        return lt0s,mt1s,lt1s
+        return patches[0], patches[1], patches[2]
 
 
 
-
-
-
-
-
-
-if __name__ == '__main__':
-    e = SRGANDataset(r"E:\traindata",mode='val')
-    lt0s,mt1s,lt1s = e[0]
-    print(type(lt0s))
-
-    # plt.imshow(a)
-    # plt.show()
